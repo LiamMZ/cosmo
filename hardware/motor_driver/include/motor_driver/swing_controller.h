@@ -7,7 +7,7 @@ namespace motor_driver
     {
         double alpha;
         unsigned int stance_ticks;
-        unsigned int dt;
+        double dt;
         double beta;
         double z_clearance;
 
@@ -16,7 +16,12 @@ namespace motor_driver
 
     class SwingController
     {
+        public:
         SwingController(SwingConfig config);
+
+        private:
+        SwingController config_;
+
     }; //end swing controller
 }
 
