@@ -36,4 +36,5 @@ include_directories(
 # Declare a C++ library
 add_library( ${PROJECT_NAME}
     src/kinematics.cpp
+    src/gait_controller.cpp
   )

@@ -1,4 +1,3 @@
-#include <algorithm>
 #include "motor_driver/kinematics.h"
 
 
