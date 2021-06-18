@@ -12,29 +12,45 @@ find_package(catkin REQUIRED COMPONENTS
   rospy
   std_msgs
   geometry_msgs
+  message_generation
+  cosmo
 )
 
+
+
+
+add_message_files(
+  FILES
+  MotorCommand.msg
+)
+
+generate_messages(
+  DEPENDENCIES
+  std_msgs
+)
 
 catkin_package(
 #  INCLUDE_DIRS include
 #  LIBRARIES motor_driver
-#  CATKIN_DEPENDS roscpp rospy std_msgs
+  CATKIN_DEPENDS message_generation roscpp rospy std_msgs
 #  DEPENDS system_lib
 )
 
 ###########
 ## Build ##
 ###########
-
+add_definitions( ${EIGEN3_DEFINITIONS} )
 ## Specify additional locations of header files
 ## Your package locations should be listed before other locations
 include_directories(
   include
   ${catkin_INCLUDE_DIRS}
+  ${EIGEN3_INCLUDE_DIRS}
 )
 
 # Declare a C++ library
 add_library( ${PROJECT_NAME}
     src/kinematics.cpp
     src/gait_controller.cpp
+    src/stance_controller.cpp
   )
