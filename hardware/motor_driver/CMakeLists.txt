@@ -53,4 +53,5 @@ add_library( ${PROJECT_NAME}
     src/kinematics.cpp
     src/gait_controller.cpp
     src/stance_controller.cpp
+    src/swing_controller.cpp
   )

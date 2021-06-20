@@ -22,16 +22,45 @@ namespace motor_driver
     class SwingController
     {
         public:
-        SwingController(SwingConfig config);
+        /*
+        * Constructor sets swing config member variable
+        */
+        SwingController(motor_driver::SwingConfig config);
         
-        geometry_msgs::Point next_foot_location(const double swing_prop, const unsigned int leg_index, cosmo::State state, const MotorCommand command);
+        /*
+        * Function to calculate next foot location for the given leg
+        *
+        * @param[in] swing_phase - indicates point in progression through swing
+        * @param[in] leg_index - index of leg for which to calculate position
+        * @param[in] state - current state of cosmo
+        * @param[in] command - movement command for cosmo
+        *
+        * @returns point - next location for foot
+        */
+        geometry_msgs::Point next_foot_location(const double swing_phase, const unsigned int leg_index, cosmo::State state, const MotorCommand command, bool triangular = true);
 
         private:
+
+        /*
+        * Function to calculate height of current point in swing, triangular swing by default
+        *
+        * @param[in] swing_phase - current point progression through swing phase
+        * @param[in] triangular - indicates that shape of swing should be triangular
+        * @param[in] swing height - height of swing
+        */
         double swing_height(const double swing_phase, bool triangular = true);
 
+        /*
+        * Function calculates the touchdown location of leg
+        *
+        * @param[in] leg_index - index of leg for which to calculate touchdown location
+        * @param[in] command - motion command for cosmo
+        */
         geometry_msgs::Point raibert_touchdown_location(const unsigned int leg_index, const MotorCommand command);
 
-        SwingController config_;
+        // holds swing config variables ()
+        motor_driver::SwingConfig config_;
+
 
     }; //end swing controller
 }
