@@ -1,10 +1,15 @@
 #include <motor_driver/swing_controller.h>
 #include <tf/transform_broadcaster.h>
-
+/*
+* Sets swing config var
+*/
 motor_driver::SwingController::SwingController(motor_driver::SwingConfig config) : config_(config)
 {
 }
 
+/*
+* Function to calculate next foot location in gait
+*/
 geometry_msgs::Point motor_driver::SwingController::next_foot_location(const double swing_phase, const unsigned int leg_index, cosmo::State state, const MotorCommand command, bool triangular)
 {
     if(swing_phase>1 || swing_phase<0)
@@ -71,5 +76,4 @@ geometry_msgs::Point motor_driver::SwingController::raibert_touchdown_location(c
     
     touchdown_location.z = update.getOrigin().z();
     return touchdown_location;
-
 }

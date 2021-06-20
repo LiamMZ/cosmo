@@ -9,6 +9,10 @@ namespace motor_driver
 {
     struct SwingConfig
     {
+        SwingConfig(double alpha_, unsigned int stance_ticks_, double dt_, double beta_, double z_clearance_,
+            std::vector<geometry_msgs::Point> default_stance_) 
+            : alpha(alpha_), stance_ticks(stance_ticks), beta(beta_), z_clearance(z_clearance_), default_stance(default_stance_)
+        {};
         double alpha;
         unsigned int stance_ticks;
         double dt;
