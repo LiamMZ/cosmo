@@ -29,7 +29,7 @@ namespace cosmo
 
         unsigned long ticks;
         std::vector<geometry_msgs::Point> foot_locations;
-        std::vector<double> joint_angles;
+        std::vector< std::vector<double> > joint_angles;
     };
 
 }
