@@ -36,7 +36,6 @@ namespace motor_driver
         */
         std::vector<double> leg_explicit_inverse_kinematics(const geometry_msgs::Point r_body_foot, const unsigned int leg_index);
         
-        inline double clamp(const double val, const double low, const double high);
 
         // distance to link l1 for each of the four legs
         double LEG_L1;

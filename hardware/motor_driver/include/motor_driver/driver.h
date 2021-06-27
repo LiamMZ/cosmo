@@ -24,10 +24,11 @@ namespace motor_driver
         std::vector< std::vector<double> > set_pose_to_default();
 
         private:
-        std::vector<geometry_msgs::Point> step_gait(const MotorCommand command, std::vector<bool>& contact_modes);
+        std::vector<geometry_msgs::Point> step_gait(const MotorCommand command, std::vector<bool>& contact_modes, const cosmo::State& state);
         bool get_gait_params(const std::vector< std::vector<bool> >& contact_phases, unsigned int& num_phases, std::vector<unsigned int>& phase_tics,  unsigned int& phase_length);
         bool get_stance_params(double& z_time_constant, double& dt);
         bool get_swing_params(SwingConfig& swing_config);
+        std::vector< geometry_msgs::Point> rotate_foot_locations(const double roll, const double pitch, const std::vector< geometry_msgs::Point>& foot_locations);
 
         cosmo::State get_state();
         ros::NodeHandle nh_;
@@ -35,6 +36,9 @@ namespace motor_driver
         std::unordered_map< cosmo::BehaviorState, cosmo::BehaviorState> trot_transition_mapping;
         std::unordered_map< cosmo::BehaviorState, cosmo::BehaviorState> activate_transition_mapping;
         std::vector<geometry_msgs::Point> default_stance_;
+        unsigned int swing_ticks_;
+        const float MAX_TILT = 0.4;
+        const float CORRECTION_FACTOR = 0.8;
     };
 }
 

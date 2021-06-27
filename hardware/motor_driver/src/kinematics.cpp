@@ -1,5 +1,5 @@
 #include "motor_driver/kinematics.h"
-
+#include "motor_driver/util.h"
 
 motor_driver::Kinematics::Kinematics(const double abduction_offset, const double l1, const double l2, const std::vector<geometry_msgs::Point> leg_origins)
  : body_offset(leg_origins), LEG_L1(l1), LEG_L2(l2), ABDUCTION_OFFSET(abduction_offset)
@@ -21,7 +21,7 @@ std::vector<double> motor_driver::Kinematics::leg_explicit_inverse_kinematics(co
 
     // Interior angle of the right triangle formed in the y-z plane by the leg that is coincident to the ab/adduction axis
     double arc_cos_arg = abduction_offset/R_body_foot_yz;
-    arc_cos_arg = clamp(arc_cos_arg, -0.99, 0.99);
+    arc_cos_arg = Util::clamp(arc_cos_arg, -0.99, 0.99);
     double phi = acos(arc_cos_arg);
 
     // Angle of the y-z projection of the hip-to-foot vector
@@ -39,7 +39,7 @@ std::vector<double> motor_driver::Kinematics::leg_explicit_inverse_kinematics(co
     // angle between vector going from hip to foot and leg link L1
     arc_cos_arg = (LEG_L1*LEG_L1 + R_hip_foot*R_hip_foot - LEG_L2*LEG_L2)/
                         (2*R_hip_foot*LEG_L1);
-    arc_cos_arg = clamp(arc_cos_arg, -0.99, 0.99);
+    arc_cos_arg = Util::clamp(arc_cos_arg, -0.99, 0.99);
     double trident = acos(arc_cos_arg);
     
     // angle of first link relative to tilted negative z axis
@@ -48,7 +48,7 @@ std::vector<double> motor_driver::Kinematics::leg_explicit_inverse_kinematics(co
     // angle between links l1 and l2
     arc_cos_arg = (LEG_L1*LEG_L1 + LEG_L2*LEG_L2 - R_hip_foot*R_hip_foot)/
                     (2*LEG_L1*LEG_L2);
-    arc_cos_arg = clamp(arc_cos_arg, -0.99, 0.99);
+    arc_cos_arg = Util::clamp(arc_cos_arg, -0.99, 0.99);
     double beta = acos(arc_cos_arg);
 
     // angle of second link relative to tilted negative z axis
@@ -72,11 +72,4 @@ std::vector< std::vector<double> > motor_driver::Kinematics::four_legs_inverse_k
         leg_index++;
     }
     return alpha;
-}
-
-double motor_driver::Kinematics::clamp(double value, const double low, const double high)
-{
-    if (value < low) return low;
-    else if (value>high) return high;
-    return value;
 }

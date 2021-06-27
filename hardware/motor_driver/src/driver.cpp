@@ -1,5 +1,8 @@
 #include <motor_driver/driver.h>
+#include <motor_driver/util.h>
 #include <ros/console.h>
+#include <tf/transform_broadcaster.h>
+
 
 motor_driver::Driver::Driver(ros::NodeHandle nh) : nh_(nh), smoothed_yaw_(0.0)
 {
@@ -66,7 +69,7 @@ bool motor_driver::Driver::get_swing_params(SwingConfig& swing_config)
     }
     if(!nh_.get_param("/motor_driver/z_clearance" swing_config.z_clearance))
     {
-        ROS_ERROR("motor_driver::Driver::get_swing_params Failed to load alpha.");
+        ROS_ERROR("motor_driver::Driver::get_swing_params Failed to load z_clearance.");
         return false;
     }
     std::vector<double> foot_loc;
@@ -82,6 +85,12 @@ bool motor_driver::Driver::get_swing_params(SwingConfig& swing_config)
         point.y = foot_loc[1];
         point.z = foot_loc[2];
         default_stance.push_back(point);
+    }
+
+    if(!nh_.get_param("/motor_driver/swing_ticks" swing_ticks_))
+    {
+        ROS_ERROR("motor_driver::Driver::get_swing_params Failed to load swing_ticks.");
+        return false;
     }
     return true;
 }
@@ -134,14 +143,67 @@ bool motor_driver::Driver::get_gait_params(const std::vector< std::vector<bool> 
     }
     return true
 }
-std::vector<geometry_msgs::Point> motor_driver::Driver::step_gait(const MotorCommand command, std::vector<bool>& contact_modes)
+std::vector<geometry_msgs::Point> motor_driver::Driver::step_gait(const MotorCommand command, std::vector<bool>& contact_modes, cosmo::State& state)
 {
-
+    contact_modes = gait_controller_.contacts(state.ticks);
+    std::vector< geometry_msgs::Point> new_foot_locations, foot_location;
+    geometry_msgs::Point new_location;
+    bool contact_mode;
+    double swing_proportion;
+    for( unsigned int leg_index = 0; leg_index<4; leg_index++)
+    {
+        contact_mode = contact_modes[leg_index];
+        foot_location = state.foot_locations[leg_index];
+        if(contact_mode)
+        {
+            new_location = stance_controller_.next_foot_location(leg_index, state, command);
+        }
+        else
+        {
+            swing_proportion = gait_controller_.subphase_ticks(state.ticks)/swing_ticks_;
+            new_location = swing_controller_.next_foot_location(swing_proportion, leg_index, state, command);
+        }
+        new_foot_locations[leg_index] = new_location;
+    }
+    return new_foot_locations;
 }
 
-std::vector< std::vector<double> > motor_driver::Driver::run(const MotorCommand command)
+std::vector< std::vector<double> > motor_driver::Driver::run(const MotorCommand command, cosmo::State& state)
 {
+    if(command.activate_event)
+    {
+        state.behavior_state = activate_transition_mapping_[state.behavior_state];
+    }
+    else if (command.trot_event)
+    {
+        state.behavior_state = trot_transition_mapping_[state.behavior_state];
+    }
+    else if (command.hop_event)
+    {
+        state.behavior_state = hop_transition_mapping_[state.behavior_state];
+    }
+    std::vector< bool> contact_modes;
+    std::vector< geometry_msgs::Point> rotated_foot_locations; 
+    double roll, pitch, yaw;
+    switch(state.behavior_state)
+    {
+        case cosmo::TROT :
+            state.foot_locations = step_gait(command, contact_modes, state);
+            rotated_foot_locations = rotate_foot_locations(command, state.foot_locations);
+            roll = state.roll;
+            yaw = state.yaw;
+            roll = CORRECTION_FACTOR * Util::clamp(state.roll, -MAX_TILT, MAX_TILT);
+            pitch = CORRECTION_FACTOR * Util::clamp(state.pitch, -MAX_TILT, MAX_TILT);
+            rotated_foot_locations = rotate_foot_locations(roll, pitch, rotated_foot_locations);
+            state.joint_angles = inverse_kinematics_.four_legs_inverse_kinematics(rotated_foot_locations);
 
+    }
+}
+
+std::vector< geometry_msgs::Point> motor_driver::Driver::rotate_foot_locations(const double roll, const double pitch, const std::vector< geometry_msgs::Point>& foot_locations)
+{
+    std::vector<geometry_msgs::Point> rotated_leg_poses;
+    
 }
 
 std::vector< std::vector<double> > set_pose_to_default()
