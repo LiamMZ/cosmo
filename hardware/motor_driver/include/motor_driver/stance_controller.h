@@ -11,6 +11,8 @@ namespace motor_driver
     class StanceController
     {
         public:
+            StanceController();
+
             /*
             * Constructor loads configuration variables
             *

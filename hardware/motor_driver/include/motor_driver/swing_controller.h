@@ -9,6 +9,8 @@ namespace motor_driver
 {
     struct SwingConfig
     {
+        SwingConfig() : : alpha(0.0), stance_ticks(0), beta(0.0), z_clearance(0.0), default_stance(std::vector<geometry_msgs::Point>);
+        
         SwingConfig(double alpha_, unsigned int stance_ticks_, double dt_, double beta_, double z_clearance_,
             std::vector<geometry_msgs::Point> default_stance_) 
             : alpha(alpha_), stance_ticks(stance_ticks), beta(beta_), z_clearance(z_clearance_), default_stance(default_stance_)
@@ -26,6 +28,8 @@ namespace motor_driver
     class SwingController
     {
         public:
+        SwingController();
+        
         /*
         * Constructor sets swing config member variable
         */

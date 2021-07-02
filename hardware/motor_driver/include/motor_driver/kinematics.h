@@ -11,6 +11,8 @@ namespace motor_driver
     class Kinematics
     {
     public:
+        Kinematics();
+
         /*
         * Constructor initializes private configuration variables
         * @param[in] abduction_offset - offset of ad/abduction axes in y from COG

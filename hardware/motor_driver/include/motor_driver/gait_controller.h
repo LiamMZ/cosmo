@@ -8,6 +8,8 @@ namespace motor_driver
     class GaitController
     {
         public:
+            GaitController();
+
             /*
             * Constructor initializes member variables
             *
