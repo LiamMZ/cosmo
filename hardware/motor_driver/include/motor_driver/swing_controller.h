@@ -2,26 +2,35 @@
 #define SWING_CONTROLLER_H
 
 #include "geometry_msgs/Point.h"
-#include "cosmo/state.h"
+#include "motor_driver/State.h"
 #include "motor_driver/MotorCommand.h"
 
 namespace motor_driver
 {
     struct SwingConfig
     {
-        SwingConfig() : : alpha(0.0), stance_ticks(0), beta(0.0), z_clearance(0.0), default_stance(std::vector<geometry_msgs::Point>);
+        SwingConfig() : alpha(0.0), stance_ticks(0), beta(0.0), z_clearance(0.0), default_stance(){};
         
-        SwingConfig(double alpha_, unsigned int stance_ticks_, double dt_, double beta_, double z_clearance_,
+        SwingConfig(double alpha_, int stance_ticks_, double dt_, double beta_, double z_clearance_,
             std::vector<geometry_msgs::Point> default_stance_) 
             : alpha(alpha_), stance_ticks(stance_ticks), beta(beta_), z_clearance(z_clearance_), default_stance(default_stance_)
         {};
         double alpha;
-        unsigned int stance_ticks;
+        int stance_ticks;
         double dt;
         double beta;
         double z_clearance;
         std::vector<geometry_msgs::Point> default_stance;
+        SwingConfig& operator =(const SwingConfig& a)
+        {
+            alpha = a.alpha;
+            beta = a.beta;
+            dt = a.dt;
+            z_clearance = a.z_clearance;
+            default_stance = a.default_stance;
 
+            return *this;
+        }
     }; // end swing config
 
 
@@ -45,8 +54,15 @@ namespace motor_driver
         *
         * @returns point - next location for foot
         */
-        geometry_msgs::Point next_foot_location(const double swing_phase, const unsigned int leg_index, cosmo::State state, const MotorCommand command, bool triangular = true);
+        geometry_msgs::Point next_foot_location(const double swing_phase, const int leg_index, State state, const MotorCommand command, bool triangular = true);
 
+
+        SwingController& operator =(const SwingController& a)
+        {
+            config_ = a.config_;
+
+            return *this;
+        }
         private:
 
         /*
@@ -64,7 +80,7 @@ namespace motor_driver
         * @param[in] leg_index - index of leg for which to calculate touchdown location
         * @param[in] command - motion command for cosmo
         */
-        geometry_msgs::Point raibert_touchdown_location(const unsigned int leg_index, const MotorCommand command);
+        geometry_msgs::Point raibert_touchdown_location(const int leg_index, const MotorCommand command);
 
         // holds swing config variables ()
         motor_driver::SwingConfig config_;

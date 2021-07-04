@@ -18,7 +18,7 @@ namespace motor_driver
             * @param[in] phase_ticks - vector of number of ticks in each phase of gait
             * @param[in] phase_length - the length of each phase
             */
-            GaitController(const std::vector< std::vector<bool> > contact_phases, const unsigned int num_phases, const std::vector<unsigned int> phase_tics, const unsigned int phase_length);
+            GaitController(const std::vector< std::vector<bool> > contact_phases, const int num_phases, const std::vector<int> phase_tics, const int phase_length);
 
             /*
             * Function to indicate which feet should be in contact with the ground
@@ -27,7 +27,25 @@ namespace motor_driver
             * 
             * @returns boolean vector of length 4 - 1 indicates foot in contact with ground 0 indicates in air
             */
-            std::vector<bool> contacts(const unsigned long ticks);
+            std::vector<bool> contacts(const long ticks);
+
+            /*
+            * Function to return the number of ticks into the current phase
+            * 
+            * @param[in] ticks - the number of timesteps since program started
+            * @returns subphase_ticks - the number of timesteps since the beginning of the current phase
+            */
+            int subphase_ticks(const long ticks);
+
+            GaitController& operator =(const GaitController& a)
+            {
+                num_phases_ = a.num_phases_;
+                contact_phases_ = a.contact_phases_;
+                phase_ticks_ = a.phase_ticks_;
+                phase_length_ = a.phase_length_;
+
+                return *this;
+            }
         private:
             /*
             * Function to return the index of the given phase based on the number of timesteps that have passed
@@ -36,27 +54,19 @@ namespace motor_driver
             *
             * @returns index of current phase
             */
-            unsigned int phase_index(const unsigned long ticks);
-
-            /*
-            * Function to return the number of ticks into the current phase
-            * 
-            * @param[in] ticks - the number of timesteps since program started
-            * @returns subphase_ticks - the number of timesteps since the beginning of the current phase
-            */
-            unsigned int subphase_ticks(const unsigned long ticks);
+            int phase_index(const long ticks);
 
             // vector of contact configurations for each foot for each phase
-            const std::vector< std::vector<bool> > contact_phases_;
+            std::vector< std::vector<bool> > contact_phases_;
 
             // number of phases
-            const unsigned int num_phases_;
+            int num_phases_;
 
             // number of ticks for each phase
-            const std::vector<unsigned int> phase_ticks_;
+            std::vector<int> phase_ticks_;
 
             // the length of each phase
-            const unsigned int phase_length_;
+            int phase_length_;
     };
 }
 

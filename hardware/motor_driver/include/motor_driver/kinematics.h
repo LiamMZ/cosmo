@@ -28,7 +28,17 @@ namespace motor_driver
         * @param[in] foot_poses - desired foot positions for each of the four legs
         * @returns - vector of twelve angles corresponding to the three motors for each of the four legs
         */
-        std::vector< std::vector<double> > four_legs_inverse_kinematics(std::vector<geometry_msgs::Point> foot_poses);
+        std::vector<double> four_legs_inverse_kinematics(std::vector<geometry_msgs::Point> foot_poses);
+
+        Kinematics& operator =(const Kinematics& a)
+        {
+            LEG_L1 = a.LEG_L1;
+            LEG_L2 = a.LEG_L2;
+            ABDUCTION_OFFSET = a.ABDUCTION_OFFSET;
+            body_offset = a.body_offset;
+
+            return *this;
+        }
 
     private:
         /*
@@ -36,7 +46,7 @@ namespace motor_driver
         * @param[in] r_body_foot - desired position of the foot
         * @param[in] leg_index - index for given leg
         */
-        std::vector<double> leg_explicit_inverse_kinematics(const geometry_msgs::Point r_body_foot, const unsigned int leg_index);
+        std::vector<double> leg_explicit_inverse_kinematics(const geometry_msgs::Point r_body_foot, const int leg_index);
         
 
         // distance to link l1 for each of the four legs

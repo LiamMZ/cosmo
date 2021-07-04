@@ -10,7 +10,7 @@ motor_driver::SwingController::SwingController(motor_driver::SwingConfig config)
 /*
 * Function to calculate next foot location in gait
 */
-geometry_msgs::Point motor_driver::SwingController::next_foot_location(const double swing_phase, const unsigned int leg_index, cosmo::State state, const MotorCommand command, bool triangular)
+geometry_msgs::Point motor_driver::SwingController::next_foot_location(const double swing_phase, const int leg_index, State state, const MotorCommand command, bool triangular)
 {
     if(swing_phase>1 || swing_phase<0)
     {
@@ -51,7 +51,7 @@ double motor_driver::SwingController::swing_height(const double swing_phase, boo
     return swing_height_;
 }
 
-geometry_msgs::Point motor_driver::SwingController::raibert_touchdown_location(const unsigned int leg_index, const MotorCommand command)
+geometry_msgs::Point motor_driver::SwingController::raibert_touchdown_location(const int leg_index, const MotorCommand command)
 {
     double theta = config_.beta * config_.stance_ticks * config_.dt * command.yaw_rate;
     tf::Transform update;

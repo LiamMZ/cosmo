@@ -6,32 +6,32 @@
 motor_driver::Driver::Driver(ros::NodeHandle nh) : nh_(nh), smoothed_yaw_(0.0)
 {
     bool isLoadSuccesful = update_parameters();
-    hop_transition_mapping_[cosmo::REST] = cosmo::HOP;
-    hop_transition_mapping_[cosmo::HOP] = cosmo::FINISHHOP;
-    hop_transition_mapping_[cosmo::FINISHHOP] = cosmo::REST;
-    hop_transition_mapping_[cosmo::TROT] = cosmo::HOP;
+    hop_transition_mapping_[State::REST] = State::HOP;
+    hop_transition_mapping_[State::HOP] = State::FINISHHOP;
+    hop_transition_mapping_[State::FINISHHOP] = State::REST;
+    hop_transition_mapping_[State::TROT] = State::HOP;
 
-    trot_transition_mapping_[cosmo::REST] = cosmo::TROT;
-    trot_transition_mapping_[cosmo::TROT] = cosmo::REST;
-    trot_transition_mapping_[cosmo::FINISHHOP] = cosmo::TROT;
-    trot_transition_mapping_[cosmo::HOP] = cosmo::TROT;
+    trot_transition_mapping_[State::REST] = State::TROT;
+    trot_transition_mapping_[State::TROT] = State::REST;
+    trot_transition_mapping_[State::FINISHHOP] = State::TROT;
+    trot_transition_mapping_[State::HOP] = State::TROT;
 
-    activate_transition_mapping_[cosmo::DEACTIVATED] = cosmo::REST;
-    activate_transition_mapping_[cosmo::REST] = cosmo::DEACTIVATED;
+    activate_transition_mapping_[State::DEACTIVATED] = State::REST;
+    activate_transition_mapping_[State::REST] = State::DEACTIVATED;
 } // END DRIVER CONSTRUCTOR
 
 bool motor_driver::Driver::update_parameters()
 {
     // get gait parameters
     std::vector< std::vector<bool> > contact_phases;
-    unsigned int num_phases = 0;
-    std::vector<unsigned int> phase_ticks;
-    unsigned int phase_length = 0;
+    int num_phases = 0;
+    std::vector<int> phase_ticks;
+    int phase_length = 0;
     if(!get_gait_params(contact_phases, num_phases, phase_ticks, phase_length))
     {
         return false;
     }
-    gait_controller_ = GaitController(phase_length, num_phases, phase_ticks, phase_length);
+    gait_controller_ = GaitController(contact_phases, num_phases, phase_ticks, phase_length);
 
     // get stance parameters
     double z_time_constant = 0.0;
@@ -49,6 +49,7 @@ bool motor_driver::Driver::update_parameters()
         return false;
     }
     swing_config.dt = dt;
+    dt_ = dt;
     swing_controller_ = SwingController(swing_config);
     default_stance_ = swing_config.default_stance;
 
@@ -66,29 +67,35 @@ bool motor_driver::Driver::update_parameters()
 
 bool motor_driver::Driver::get_swing_params(SwingConfig& swing_config)
 {
-    if(!nh_.getParam("/motor_driver/alpha", swing_config.alpha))
+    double tempd = 0.0;
+    int tempi = 0;
+    if(!nh_.getParam("/motor_driver/alpha", tempd))
     {
         ROS_ERROR("motor_driver::Driver::get_swing_params Failed to load alpha.");
         return false;
     }
-    if(!nh_.getParam("/motor_driver/stance_ticks", swing_config.stance_ticks))
+    swing_config.alpha = tempd;
+    if(!nh_.getParam("/motor_driver/stance_ticks", tempi))
     {
         ROS_ERROR("motor_driver::Driver::get_swing_params Failed to load stance_ticks.");
         return false;
     }
-    if(!nh_.getParam("/motor_driver/beta", swing_config.beta))
+    swing_config.stance_ticks = tempi;
+    if(!nh_.getParam("/motor_driver/beta", tempd))
     {
         ROS_ERROR("motor_driver::Driver::get_swing_params Failed to load beta.");
         return false;
     }
-    if(!nh_.getParam("/motor_driver/z_clearance", swing_config.z_clearance))
+    swing_config.beta = tempd;
+    if(!nh_.getParam("/motor_driver/z_clearance", tempd))
     {
         ROS_ERROR("motor_driver::Driver::get_swing_params Failed to load z_clearance.");
         return false;
     }
-    std::vector<double> foot_loc;
+    swing_config.z_clearance = tempd;
+    std::vector<double> foot_loc = {0.0,0.0,0.0};
     geometry_msgs::Point point;
-    for(unsigned int leg_index = 0; leg_index<4; leg_index++)
+    for(int leg_index = 0; leg_index<4; leg_index++)
     {
          if(!nh_.getParam("/motor_driver/default_stance_"+leg_index, foot_loc))
         {
@@ -98,43 +105,48 @@ bool motor_driver::Driver::get_swing_params(SwingConfig& swing_config)
         point.x = foot_loc[0];
         point.y = foot_loc[1];
         point.z = foot_loc[2];
-        default_stance.push_back(point);
+        swing_config.default_stance.push_back(point);
     }
-
-    if(!nh_.getParam("/motor_driver/swing_ticks", swing_ticks_))
+    if(!nh_.getParam("/motor_driver/swing_ticks", tempi))
     {
         ROS_ERROR("motor_driver::Driver::get_swing_params Failed to load swing_ticks.");
         return false;
     }
+    swing_ticks_ = tempi;
     return true;
 }
 
 bool motor_driver::Driver::get_stance_params(double& z_time_constant, double& dt)
 {
-    if(!nh_.getParam("/motor_driver/z_time_constant", z_time_constant))
+    double temp = 0.0;
+    if(!nh_.getParam("/motor_driver/z_time_constant", temp))
     {
         ROS_ERROR("motor_driver::Driver::get_stance_params Failed to load z_time_constant.");
         return false;
     }
-    if(!nh_.getParam("/motor_driver/dt", dt))
+    z_time_constant = temp;
+
+    if(!nh_.getParam("/motor_driver/dt", temp))
     {
-        ROS_ERROR("motor_driver::Driver::get_stance_params Failed to load dt.")
+        ROS_ERROR("motor_driver::Driver::get_stance_params Failed to load dt.");
         return false;
     }
-    if(!nh_.getParam("/motor_driver/default_z_ref_", default_z_ref_))
+    dt = temp;
+    if(!nh_.getParam("/motor_driver/default_z_ref_", temp))
     {
-        ROS_ERROR("motor_driver::Driver::get_stance_params Failed to load default_z_ref_.")
+        ROS_ERROR("motor_driver::Driver::get_stance_params Failed to load default_z_ref_.");
         return false;
     }
+    default_z_ref_ = temp;
     
     return true;
 }
 
-bool motor_driver::Driver::get_gait_params(const std::vector< std::vector<bool> >& contact_phases, unsigned int& num_phases, std::vector<unsigned int>& phase_tics,  unsigned int& phase_length)
+bool motor_driver::Driver::get_gait_params(std::vector< std::vector<bool> >& contact_phases, int& num_phases, std::vector<int>& phase_ticks,  int& phase_length)
 {
     // get contact phases
-    std::vector<bool> phase;
-    for(unsigned int leg_index = 0; leg_index<4; leg_index++)
+    std::vector<bool> phase = {0,0,0,0};
+    for(int leg_index = 0; leg_index<4; leg_index++)
     {
         if(!nh_.getParam("/motor_driver/contact_phases_"+leg_index, phase))
         {
@@ -143,52 +155,85 @@ bool motor_driver::Driver::get_gait_params(const std::vector< std::vector<bool> 
         }
         contact_phases.push_back(phase);
     }
-
-    if(!nh_.getParam("/motor_driver/num_phases", num_phases))
+    int temp = 0;
+    if(!nh_.getParam("/motor_driver/num_phases", temp))
     {
         ROS_ERROR("motor_driver::Driver::get_gait_params Failed to Load num_phases.");
         return false;
     }
+    num_phases = temp;
 
-    if(!nh_.getParam("/motor_driver/phase_ticks", phase_ticks))
+    std::vector<int> temp_ticks;
+    if(!nh_.getParam("/motor_driver/phase_ticks", temp_ticks))
     {
         ROS_ERROR("motor_driver::Driver::get_gait_params Failed to Load phase_ticks.");
         return false;
     }
+    phase_ticks = temp_ticks;
 
-    if(!nh_.getParam("/motor_driver/phase_length", phase_length))
+    if(!nh_.getParam("/motor_driver/phase_length", temp))
     {
         ROS_ERROR("motor_driver::Driver::get_gait_params Failed to Load phase_length.");
         return false;
     }
-    if(!nh_.getParam("/motor_driver/max_yaw_rate", max_yaw_rate_))
+    phase_length = temp;
+
+    double temp_max_yaw_rate;
+    if(!nh_.getParam("/motor_driver/max_yaw_rate", temp_max_yaw_rate))
     {
         ROS_ERROR("motor_driver::Driver::get_gait_params Failed to Load max_yaw_rate.");
         return false;
     }
-    return true
+    max_yaw_rate_ = temp_max_yaw_rate;
+
+    if(!nh_.getParam("/motor_driver/max_stance_yaw_rate", temp_max_yaw_rate))
+    {
+        ROS_ERROR("motor_driver::Driver::get_gait_params Failed to Load max_stance_yaw_rate.");
+        return false;
+    }
+    max_stance_yaw_rate_ = temp_max_yaw_rate;
+
+    if(!nh_.getParam("/motor_driver/max_stance_yaw", temp_max_yaw_rate))
+    {
+        ROS_ERROR("motor_driver::Driver::get_gait_params Failed to Load max_stance_yaw.");
+        return false;
+    }
+    max_stance_yaw_ = temp_max_yaw_rate;
+    if(!nh_.getParam("/motor_driver/yaw_time_constant", temp_max_yaw_rate))
+    {
+        ROS_ERROR("motor_driver::Driver::get_gait_params Failed to Load max_stance_yaw.");
+        return false;
+    }
+    yaw_time_constant_ = temp_max_yaw_rate;
+    return true;
 }
 
 bool motor_driver::Driver::get_kinematics_params(double& abduction_offset, double& L1, double& L2, std::vector<geometry_msgs::Point>& leg_origins)
 {
-    if(!nh_.getParam("/motor_driver/L1", L1))
+    double temp = 0.0;
+    if(!nh_.getParam("/motor_driver/L1", temp))
     {
         ROS_ERROR("motor_driver::Driver::get_swing_params Failed to load L1.");
         return false;
     }
-    if(!nh_.getParam("/motor_driver/L2", L2))
+    L1 = temp;
+
+    if(!nh_.getParam("/motor_driver/L2", temp))
     {
         ROS_ERROR("motor_driver::Driver::get_swing_params Failed to load L2.");
         return false;
     }
-    if(!nh_.getParam("/motor_driver/abduction_offset", abduction_offset))
+    L2 = temp;
+    if(!nh_.getParam("/motor_driver/abduction_offset", temp))
     {
         ROS_ERROR("motor_driver::Driver::get_swing_params Failed to load abduction_offset.");
         return false;
     }
+    abduction_offset = temp;
+
     std::vector<double> foot_loc;
     geometry_msgs::Point point;
-    for(unsigned int leg_index = 0; leg_index<4; leg_index++)
+    for(int leg_index = 0; leg_index<4; leg_index++)
     {
          if(!nh_.getParam("/motor_driver/leg_origin_"+leg_index, foot_loc))
         {
@@ -203,14 +248,15 @@ bool motor_driver::Driver::get_kinematics_params(double& abduction_offset, doubl
     return true;
 }
 
-std::vector<geometry_msgs::Point> motor_driver::Driver::step_gait(const MotorCommand command, std::vector<bool>& contact_modes, cosmo::State& state)
+std::vector<geometry_msgs::Point> motor_driver::Driver::step_gait(const MotorCommand command, std::vector<bool>& contact_modes, State& state)
 {
     contact_modes = gait_controller_.contacts(state.ticks);
-    std::vector< geometry_msgs::Point> new_foot_locations, foot_location;
+    std::vector< geometry_msgs::Point> new_foot_locations;
+    geometry_msgs::Point foot_location;
     geometry_msgs::Point new_location;
     bool contact_mode;
     double swing_proportion;
-    for( unsigned int leg_index = 0; leg_index<4; leg_index++)
+    for( int leg_index = 0; leg_index<4; leg_index++)
     {
         contact_mode = contact_modes[leg_index];
         foot_location = state.foot_locations[leg_index];
@@ -228,7 +274,7 @@ std::vector<geometry_msgs::Point> motor_driver::Driver::step_gait(const MotorCom
     return new_foot_locations;
 }
 
-std::vector< std::vector<double> > motor_driver::Driver::run(const MotorCommand command, cosmo::State& state)
+void motor_driver::Driver::run(const MotorCommand command, State& state)
 {
     if(command.activate_event)
     {
@@ -247,45 +293,45 @@ std::vector< std::vector<double> > motor_driver::Driver::run(const MotorCommand 
     double roll, pitch, yaw;
     switch(state.behavior_state)
     {
-        case cosmo::TROT :
+        case State::TROT :
             state.foot_locations = step_gait(command, contact_modes, state);
-            rotated_foot_locations = rotate_foot_locations(command.roll, command.pitch, command.yaw, state.foot_locations);
+            rotated_foot_locations = rotate_foot_locations(command.roll, command.pitch, 0.0, state.foot_locations);
             roll = state.roll;
-            yaw = state.yaw;
+            yaw = 0.0;
             roll = CORRECTION_FACTOR * Util::clamp(state.roll, -MAX_TILT, MAX_TILT);
             pitch = CORRECTION_FACTOR * Util::clamp(state.pitch, -MAX_TILT, MAX_TILT);
             rotated_foot_locations = rotate_foot_locations(roll, pitch, yaw, rotated_foot_locations);
             state.joint_angles = inverse_kinematics_.four_legs_inverse_kinematics(rotated_foot_locations);
             break;
-        case cosmo::HOP :
+        case State::HOP :
             for(int i = 0; i<4; i++)
             {
-                state.foot_locations[i] = default_stance[i];
+                state.foot_locations[i] = default_stance_[i];
                 state.foot_locations[i].z -= 0.09;
             }
             state.joint_angles = inverse_kinematics_.four_legs_inverse_kinematics(state.foot_locations);
             break;
-        case cosmo::FINISHHOP :
+        case State::FINISHHOP :
             for(int i = 0; i<4; i++)
             {
-                state.foot_locations[i] = default_stance[i];
+                state.foot_locations[i] = default_stance_[i];
                 state.foot_locations[i].z -= 0.22;
             }
             state.joint_angles = inverse_kinematics_.four_legs_inverse_kinematics(state.foot_locations);
             break;
-        case cosmo::REST:
-            double yaw_proportion = command.yaw_Rate / max_yaw_rate_;
+        case State::REST:
+            double yaw_proportion = command.yaw_rate / max_yaw_rate_;
             smoothed_yaw_ += dt_ * Util::clipped_first_order_filter( smoothed_yaw_,
                                                                    yaw_proportion * -max_stance_yaw_,
                                                                    max_stance_yaw_rate_,
                                                                    yaw_time_constant_);
             for(int i = 0; i<4; i++)
             {
-                state.foot_locations[i] = default_stance[i];
+                state.foot_locations[i] = default_stance_[i];
                 state.foot_locations[i].z += command.height;
             }
-            std::vector<geometry_msgs::Point> rotated_foot_locations = rotate_foot_locations(command.roll, command.pitch, smoothed_yaw_);
-            state.joint_angles = inverse_kinematics_.four_foot_inverse_kinematics(rotated_foot_locations);
+            std::vector<geometry_msgs::Point> rotated_foot_locations = rotate_foot_locations(command.roll, command.pitch, smoothed_yaw_, state.foot_locations);
+            state.joint_angles = inverse_kinematics_.four_legs_inverse_kinematics(rotated_foot_locations);
             break;
         state.ticks +=1;
         state.pitch = command.pitch;
@@ -297,7 +343,7 @@ std::vector< std::vector<double> > motor_driver::Driver::run(const MotorCommand 
 std::vector< geometry_msgs::Point> motor_driver::Driver::rotate_foot_locations(const double roll, const double pitch, const double yaw, const std::vector< geometry_msgs::Point>& foot_locations)
 {
     std::vector<geometry_msgs::Point> rotated_leg_poses;
-    geometry_mst::Point new_pose;
+    geometry_msgs::Point new_pose;
 
     // set up tf for rotation
     tf::Transform update;
@@ -308,7 +354,7 @@ std::vector< geometry_msgs::Point> motor_driver::Driver::rotate_foot_locations(c
     for(int leg = 0; leg<4; leg++)
     {
         tf::Transform leg_tf;
-        leg_tf.setOrigin(tf::Vector3(foot_locations[leg].x, foot_locations[leg].y, foot_locations[leg].z))
+        leg_tf.setOrigin(tf::Vector3(foot_locations[leg].x, foot_locations[leg].y, foot_locations[leg].z));
         leg_tf = update*leg_tf;
         new_pose.x = leg_tf.getOrigin().x();
         new_pose.y = leg_tf.getOrigin().y();
@@ -318,13 +364,13 @@ std::vector< geometry_msgs::Point> motor_driver::Driver::rotate_foot_locations(c
     return rotated_leg_poses;
 }
 
-std::vector< std::vector<double> > set_pose_to_default(cosmo::State& state)
+void motor_driver::Driver::set_pose_to_default(State& state)
 {
     for(int i = 0; i<4; i++)
     {
-        state.foot_locations[i] = default_stance[i];
+        state.foot_locations[i] = default_stance_[i];
         state.foot_locations[i].z += default_z_ref_;
     }
-    state.joint_angles = inverse_kinematics_.four_leg_inverse_kinematics(state.foot_locations);
+    state.joint_angles = inverse_kinematics_.four_legs_inverse_kinematics(state.foot_locations);
 }
 

@@ -1,3 +1,9 @@
+#ifndef UTIL_H
+#define UTIL_H
+
+#include<vector>
+
+
 namespace motor_driver
 {
     class Util
@@ -9,14 +15,14 @@ namespace motor_driver
             else if (value>high) return high;
             return value;
         };
-    };
 
-    struct EnumClassHash
-    {
-        template <typename T>
-        std::size_t operator()(T t) const
+        template<class T>
+        static double clipped_first_order_filter(T input, T target, T max_rate, T tau)
         {
-            return static_cast<std::size_t>(t);
-        }
+            T rate = (target - input)/tau;
+            return clamp(rate, -max_rate, max_rate);
+        };
     };
 }
+
+#endif

@@ -24,6 +24,7 @@ namespace cosmo
         double height;
         double pitch;
         double roll;
+        double yaw;
         int activation;
         BehaviorState behavior_state;
 

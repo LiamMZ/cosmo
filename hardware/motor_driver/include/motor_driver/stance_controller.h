@@ -4,7 +4,7 @@
 #include <tf/transform_broadcaster.h>
 #include <geometry_msgs/Point.h>
 #include "motor_driver/MotorCommand.h"
-#include "cosmo/state.h"
+#include "motor_driver/State.h"
 
 namespace motor_driver
 {
@@ -30,7 +30,16 @@ namespace motor_driver
             *
             * @returns position of foot for next time step
             */
-            geometry_msgs::Point next_foot_location(const unsigned int leg_index, const cosmo::State state, const MotorCommand command);
+            geometry_msgs::Point next_foot_location(const int leg_index, const State state, const MotorCommand command);
+
+            StanceController& operator =(const StanceController& a)
+            {
+                dt_ = a.dt_;
+                z_time_constant_ = a.z_time_constant_;
+
+                return *this;
+            }
+
         private:
             /*
             * Function to calculate transform increment for foot position

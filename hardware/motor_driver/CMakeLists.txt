@@ -16,17 +16,16 @@ find_package(catkin REQUIRED COMPONENTS
   cosmo
 )
 
-
-
-
 add_message_files(
   FILES
   MotorCommand.msg
+  State.msg
 )
 
 generate_messages(
   DEPENDENCIES
   std_msgs
+  geometry_msgs
 )
 
 catkin_package(

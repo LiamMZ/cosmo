@@ -5,7 +5,7 @@ motor_driver::Kinematics::Kinematics(const double abduction_offset, const double
  : body_offset(leg_origins), LEG_L1(l1), LEG_L2(l2), ABDUCTION_OFFSET(abduction_offset)
 {}
 
-std::vector<double> motor_driver::Kinematics::leg_explicit_inverse_kinematics(const geometry_msgs::Point r_body_foot, const unsigned int leg_index)
+std::vector<double> motor_driver::Kinematics::leg_explicit_inverse_kinematics(const geometry_msgs::Point r_body_foot, const int leg_index)
 {
     double x = r_body_foot.x;
     double y = r_body_foot.y;
@@ -58,17 +58,21 @@ std::vector<double> motor_driver::Kinematics::leg_explicit_inverse_kinematics(co
     return ret;
 }
 
-std::vector< std::vector<double> > motor_driver::Kinematics::four_legs_inverse_kinematics(std::vector<geometry_msgs::Point> leg_poses)
+std::vector<double> motor_driver::Kinematics::four_legs_inverse_kinematics(std::vector<geometry_msgs::Point> leg_poses)
 {
-    std::vector< std::vector<double> > alpha;
+    std::vector<double> alpha;
+    std::vector<double> leg_angles;
     geometry_msgs::Point body_offset;
-    unsigned int leg_index = 0;
+    int leg_index = 0;
     for(geometry_msgs::Point pose : leg_poses)
     {
         pose.x = pose.x-body_offset.x;
         pose.y = pose.y-body_offset.y;
         pose.z = pose.z-body_offset.z;
-        alpha.push_back(leg_explicit_inverse_kinematics(pose, leg_index));
+        leg_angles = leg_explicit_inverse_kinematics(pose, leg_index);
+        alpha.push_back(leg_angles[0]);
+        alpha.push_back(leg_angles[1]);
+        alpha.push_back(leg_angles[2]);
         leg_index++;
     }
     return alpha;
