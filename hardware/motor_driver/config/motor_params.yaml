@@ -1,0 +1,44 @@
+
+# Gait Parameters
+contact_phases_1: [0,0,0,0]
+contact_phases_2: [0,0,0,0]
+contact_phases_3: [0,0,0,0]
+contact_phases_4: [0,0,0,0]
+phase_ticks: [0,0,0,0,0]
+
+num_phases: 5
+
+phase_length: 69
+
+max_yaw_rate: 1.0
+
+max_stance_yaw_rate: 1.0
+
+yaw_time_rate: 1.0
+
+# Stance Controller Parameters
+z_time_constant: 1.0
+dt: .05
+default_z_ref: .80
+
+# Swing Controller Parameters
+alpha: 0.5
+beta: 0.5
+stance_ticks: 100
+z_clearance: 0.5
+
+default_stance_0: []
+default_stance_1: []
+default_stance_2: []
+default_stance_3: []
+
+swing_ticks: 100
+
+# Inverse Kinematics Parameters
+L1: 0.5
+L2: 0.5
+abduction_offset: .25
+leg_origin_0: [0.0,0.0,0.0]
+leg_origin_1: [0.0,0.0,0.0]
+leg_origin_2: [0.0,0.0,0.0]
+leg_origin_3: [0.0,0.0,0.0]
