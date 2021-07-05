@@ -4,7 +4,7 @@ motor_driver::StanceController::StanceController(const double z_time_constant, c
     : z_time_constant_(z_time_constant), dt_(dt)
 {}
 
-geometry_msgs::Point motor_driver::StanceController::next_foot_location(const int leg_index, const State state, const MotorCommand command)
+geometry_msgs::Point motor_driver::StanceController::next_foot_location(const int leg_index, const MovementState state, const MotorCommand command)
 {
     tf::Transform foot_location;
     geometry_msgs::Point translation;

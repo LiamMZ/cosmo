@@ -8,7 +8,7 @@
 #include <motor_driver/MotorCommand.h>
 #include <motor_driver/gait_controller.h>
 #include <motor_driver/stance_controller.h>
-#include <motor_driver/State.h> // state ros message
+#include <motor_driver/MovementState.h> // state ros message
 #include <motor_driver/swing_controller.h>
 #include <motor_driver/util.h>
 
@@ -24,7 +24,7 @@ namespace motor_driver
         public:
         Driver(ros::NodeHandle nh);
 
-        /*
+        /**
         * Move State forward one time step
         *
         * @param[in] command - command for movement
@@ -32,18 +32,18 @@ namespace motor_driver
         *
         * @param[out] state - state after one time step
         */
-        void run(const MotorCommand command, State& state);
+        void run(const MotorCommand command, MovementState& state);
         
-        /*
+        /**
         * Function to move joints to default positions
         *
         * @param[in] state - current state of robot
         * @param[out] state - updated state
         */
-        void set_pose_to_default(State& state);
+        void set_pose_to_default(MovementState& state);
 
         private:
-        /*
+        /**
         * calculate the next foot locations for the step gate
         * @param[in] command - 
         * @param[in] contact_modes - foot contacts for all of the phases
@@ -51,9 +51,9 @@ namespace motor_driver
         * 
         * @returns new foot locations
         */
-        std::vector<geometry_msgs::Point> step_gait(const MotorCommand command, std::vector<bool>& contact_modes, State& state);
+        std::vector<geometry_msgs::Point> step_gait(const MotorCommand command, std::vector<bool>& contact_modes, MovementState& state);
 
-        /*
+        /**
         * Function to retrieve gait related parameters from the parameter server
         *
         * @param[out] contact_phases - contact settings for all of the phases
@@ -64,7 +64,7 @@ namespace motor_driver
         */
         bool get_gait_params(std::vector< std::vector<bool> >& contact_phases, int& num_phases, std::vector<int>& phase_ticks,  int& phase_length);
 
-        /*
+        /**
         *  Function to retrieve stance parameters from the parameter server
         *
         * @parame[out] z_time_constant - 
@@ -73,7 +73,7 @@ namespace motor_driver
         */
         bool get_stance_params(double& z_time_constant, double& dt);
 
-        /*
+        /**
         * Function to get swing parameters from the parameter server
         *
         * @param[out] swing_config - struct to hold parameters needed for swing controller
@@ -81,7 +81,7 @@ namespace motor_driver
         */
         bool get_swing_params(SwingConfig& swing_config);
 
-        /*
+        /**
         * Function to retrieve kinematics related parameters from parameter server
         *
         * @param[out] abduction_offset - offset in y dim for hip axis
@@ -92,7 +92,7 @@ namespace motor_driver
         */
         bool get_kinematics_params(double& abduction_offset, double& L1, double& L2, std::vector<geometry_msgs::Point>& leg_origins);
 
-        /*
+        /**
         * Function to rotate locations based on passed in angle values
         *
         * @param[in] roll - angle to rotate in roll dir
@@ -103,7 +103,7 @@ namespace motor_driver
         */
         std::vector< geometry_msgs::Point> rotate_foot_locations(const double roll, const double pitch, const double yaw, const std::vector< geometry_msgs::Point>& foot_locations);
         
-        /*
+        /**
         * Function to update driver class parameters, and parameters for driver controllers
         *
         * @returns true if parameters are successfully updated

@@ -14,12 +14,14 @@ find_package(catkin REQUIRED COMPONENTS
   geometry_msgs
   message_generation
   cosmo
+  pluginlib
+  nodelet
 )
 
 add_message_files(
   FILES
   MotorCommand.msg
-  State.msg
+  MovementState.msg
 )
 
 generate_messages(
@@ -55,3 +57,14 @@ add_library( ${PROJECT_NAME}
     src/swing_controller.cpp
     src/driver.cpp
   )
+
+add_library(MotorDriverNodelet src/driver_nodelet.cpp)
+target_link_libraries(MotorDriverNodelet ${catkin_LIBRARIES} ${PROJECT_NAME} -lwiringPi)
+## Mark the nodelet library for installations
+install(TARGETS MotorDriverNodelet
+  ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
+  LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
+  RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION})
+
+  install(FILES nodelet_plugin.xml motor_actuator_nodelet.launch
+  DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION})

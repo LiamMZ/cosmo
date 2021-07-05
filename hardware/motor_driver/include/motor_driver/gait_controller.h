@@ -10,7 +10,7 @@ namespace motor_driver
         public:
             GaitController();
 
-            /*
+            /**
             * Constructor initializes member variables
             *
             * @param[in] contact_phases - 2d vector of bools for each foot in each phase 1 indicates contact 0 indicates in motion
@@ -20,7 +20,7 @@ namespace motor_driver
             */
             GaitController(const std::vector< std::vector<bool> > contact_phases, const int num_phases, const std::vector<int> phase_tics, const int phase_length);
 
-            /*
+            /**
             * Function to indicate which feet should be in contact with the ground
             *
             * @param[in] ticks - the number of time steps since the program started
@@ -29,7 +29,7 @@ namespace motor_driver
             */
             std::vector<bool> contacts(const long ticks);
 
-            /*
+            /**
             * Function to return the number of ticks into the current phase
             * 
             * @param[in] ticks - the number of timesteps since program started
@@ -47,7 +47,7 @@ namespace motor_driver
                 return *this;
             }
         private:
-            /*
+            /**
             * Function to return the index of the given phase based on the number of timesteps that have passed
             *
             * @param[in] ticks - the number of time steps since the program started

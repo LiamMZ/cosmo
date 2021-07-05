@@ -6,18 +6,18 @@
 motor_driver::Driver::Driver(ros::NodeHandle nh) : nh_(nh), smoothed_yaw_(0.0)
 {
     bool isLoadSuccesful = update_parameters();
-    hop_transition_mapping_[State::REST] = State::HOP;
-    hop_transition_mapping_[State::HOP] = State::FINISHHOP;
-    hop_transition_mapping_[State::FINISHHOP] = State::REST;
-    hop_transition_mapping_[State::TROT] = State::HOP;
+    hop_transition_mapping_[MovementState::REST] = MovementState::HOP;
+    hop_transition_mapping_[MovementState::HOP] = MovementState::FINISHHOP;
+    hop_transition_mapping_[MovementState::FINISHHOP] = MovementState::REST;
+    hop_transition_mapping_[MovementState::TROT] = MovementState::HOP;
 
-    trot_transition_mapping_[State::REST] = State::TROT;
-    trot_transition_mapping_[State::TROT] = State::REST;
-    trot_transition_mapping_[State::FINISHHOP] = State::TROT;
-    trot_transition_mapping_[State::HOP] = State::TROT;
+    trot_transition_mapping_[MovementState::REST] = MovementState::TROT;
+    trot_transition_mapping_[MovementState::TROT] = MovementState::REST;
+    trot_transition_mapping_[MovementState::FINISHHOP] = MovementState::TROT;
+    trot_transition_mapping_[MovementState::HOP] = MovementState::TROT;
 
-    activate_transition_mapping_[State::DEACTIVATED] = State::REST;
-    activate_transition_mapping_[State::REST] = State::DEACTIVATED;
+    activate_transition_mapping_[MovementState::DEACTIVATED] = MovementState::REST;
+    activate_transition_mapping_[MovementState::REST] = MovementState::DEACTIVATED;
 } // END DRIVER CONSTRUCTOR
 
 bool motor_driver::Driver::update_parameters()
@@ -132,9 +132,9 @@ bool motor_driver::Driver::get_stance_params(double& z_time_constant, double& dt
         return false;
     }
     dt = temp;
-    if(!nh_.getParam("/motor_driver/default_z_ref_", temp))
+    if(!nh_.getParam("/motor_driver/default_z_ref", temp))
     {
-        ROS_ERROR("motor_driver::Driver::get_stance_params Failed to load default_z_ref_.");
+        ROS_ERROR("motor_driver::Driver::get_stance_params Failed to load default_z_ref.");
         return false;
     }
     default_z_ref_ = temp;
@@ -248,7 +248,7 @@ bool motor_driver::Driver::get_kinematics_params(double& abduction_offset, doubl
     return true;
 }
 
-std::vector<geometry_msgs::Point> motor_driver::Driver::step_gait(const MotorCommand command, std::vector<bool>& contact_modes, State& state)
+std::vector<geometry_msgs::Point> motor_driver::Driver::step_gait(const MotorCommand command, std::vector<bool>& contact_modes, MovementState& state)
 {
     contact_modes = gait_controller_.contacts(state.ticks);
     std::vector< geometry_msgs::Point> new_foot_locations;
@@ -274,7 +274,7 @@ std::vector<geometry_msgs::Point> motor_driver::Driver::step_gait(const MotorCom
     return new_foot_locations;
 }
 
-void motor_driver::Driver::run(const MotorCommand command, State& state)
+void motor_driver::Driver::run(const MotorCommand command, MovementState& state)
 {
     if(command.activate_event)
     {
@@ -293,7 +293,7 @@ void motor_driver::Driver::run(const MotorCommand command, State& state)
     double roll, pitch, yaw;
     switch(state.behavior_state)
     {
-        case State::TROT :
+        case MovementState::TROT :
             state.foot_locations = step_gait(command, contact_modes, state);
             rotated_foot_locations = rotate_foot_locations(command.roll, command.pitch, 0.0, state.foot_locations);
             roll = state.roll;
@@ -303,7 +303,7 @@ void motor_driver::Driver::run(const MotorCommand command, State& state)
             rotated_foot_locations = rotate_foot_locations(roll, pitch, yaw, rotated_foot_locations);
             state.joint_angles = inverse_kinematics_.four_legs_inverse_kinematics(rotated_foot_locations);
             break;
-        case State::HOP :
+        case MovementState::HOP :
             for(int i = 0; i<4; i++)
             {
                 state.foot_locations[i] = default_stance_[i];
@@ -311,7 +311,7 @@ void motor_driver::Driver::run(const MotorCommand command, State& state)
             }
             state.joint_angles = inverse_kinematics_.four_legs_inverse_kinematics(state.foot_locations);
             break;
-        case State::FINISHHOP :
+        case MovementState::FINISHHOP :
             for(int i = 0; i<4; i++)
             {
                 state.foot_locations[i] = default_stance_[i];
@@ -319,7 +319,7 @@ void motor_driver::Driver::run(const MotorCommand command, State& state)
             }
             state.joint_angles = inverse_kinematics_.four_legs_inverse_kinematics(state.foot_locations);
             break;
-        case State::REST:
+        case MovementState::REST:
             double yaw_proportion = command.yaw_rate / max_yaw_rate_;
             smoothed_yaw_ += dt_ * Util::clipped_first_order_filter( smoothed_yaw_,
                                                                    yaw_proportion * -max_stance_yaw_,
@@ -364,7 +364,7 @@ std::vector< geometry_msgs::Point> motor_driver::Driver::rotate_foot_locations(c
     return rotated_leg_poses;
 }
 
-void motor_driver::Driver::set_pose_to_default(State& state)
+void motor_driver::Driver::set_pose_to_default(MovementState& state)
 {
     for(int i = 0; i<4; i++)
     {

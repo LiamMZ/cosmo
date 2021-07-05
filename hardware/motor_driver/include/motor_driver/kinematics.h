@@ -13,7 +13,7 @@ namespace motor_driver
     public:
         Kinematics();
 
-        /*
+        /**
         * Constructor initializes private configuration variables
         * @param[in] abduction_offset - offset of ad/abduction axes in y from COG
         * @param[in] l1 - distance to link l1 on robot leg in meters
@@ -23,7 +23,7 @@ namespace motor_driver
         */
         Kinematics(const double abduction_offset, const double l1, const double l2, const std::vector<geometry_msgs::Point> leg_origins);
 
-        /*
+        /**
         * Function to perform inverse kinematics for each of four passed in foot positions
         * @param[in] foot_poses - desired foot positions for each of the four legs
         * @returns - vector of twelve angles corresponding to the three motors for each of the four legs
@@ -41,7 +41,7 @@ namespace motor_driver
         }
 
     private:
-        /*
+        /**
         * Function to calculate inverse kinematics on a single foot position
         * @param[in] r_body_foot - desired position of the foot
         * @param[in] leg_index - index for given leg

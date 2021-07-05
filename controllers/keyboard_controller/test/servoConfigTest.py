@@ -8,7 +8,7 @@ from i2cpwm_board.msg import Servo, ServoArray, ServoConfig, ServoConfigArray
 from i2cpwm_board.srv import ServosConfig
 
 # Global variable for number of servos
-numServos = 8
+numServos = 3
 
 msg = """
 Servo Control Module for 12 Servos.
@@ -133,7 +133,7 @@ class SpotMicroServoControl():
             servo_config.range = 400
             servo_config.servo = i
             servo_config.direction = 1
-            self._servo_config_msg.servos.append(self.servo_config)
+            self._servo_config_msg.servos.append(servo_config)
             
         rospy.loginfo("> Waiting for config_servos service...")
         print('test1')

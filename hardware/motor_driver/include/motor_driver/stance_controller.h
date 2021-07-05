@@ -4,7 +4,7 @@
 #include <tf/transform_broadcaster.h>
 #include <geometry_msgs/Point.h>
 #include "motor_driver/MotorCommand.h"
-#include "motor_driver/State.h"
+#include "motor_driver/MovementState.h"
 
 namespace motor_driver
 {
@@ -13,7 +13,7 @@ namespace motor_driver
         public:
             StanceController();
 
-            /*
+            /**
             * Constructor loads configuration variables
             *
             * @param[in] z_time_constant - 
@@ -21,7 +21,7 @@ namespace motor_driver
             */
             StanceController(const double z_time_constant, const double dt);
 
-            /*
+            /**
             * Function to calculate next foot location based on commands
             * 
             * @param[in] leg_index - index of leg for which position is being calculated 
@@ -30,7 +30,7 @@ namespace motor_driver
             *
             * @returns position of foot for next time step
             */
-            geometry_msgs::Point next_foot_location(const int leg_index, const State state, const MotorCommand command);
+            geometry_msgs::Point next_foot_location(const int leg_index, const MovementState state, const MotorCommand command);
 
             StanceController& operator =(const StanceController& a)
             {
@@ -41,7 +41,7 @@ namespace motor_driver
             }
 
         private:
-            /*
+            /**
             * Function to calculate transform increment for foot position
             *
             * @param[in] z - current z position of foot

@@ -2,7 +2,7 @@
 #define SWING_CONTROLLER_H
 
 #include "geometry_msgs/Point.h"
-#include "motor_driver/State.h"
+#include "motor_driver/MovementState.h"
 #include "motor_driver/MotorCommand.h"
 
 namespace motor_driver
@@ -39,12 +39,12 @@ namespace motor_driver
         public:
         SwingController();
         
-        /*
+        /**
         * Constructor sets swing config member variable
         */
         SwingController(motor_driver::SwingConfig config);
         
-        /*
+        /**
         * Function to calculate next foot location for the given leg
         *
         * @param[in] swing_phase - indicates point in progression through swing
@@ -54,7 +54,7 @@ namespace motor_driver
         *
         * @returns point - next location for foot
         */
-        geometry_msgs::Point next_foot_location(const double swing_phase, const int leg_index, State state, const MotorCommand command, bool triangular = true);
+        geometry_msgs::Point next_foot_location(const double swing_phase, const int leg_index, MovementState state, const MotorCommand command, bool triangular = true);
 
 
         SwingController& operator =(const SwingController& a)
@@ -65,7 +65,7 @@ namespace motor_driver
         }
         private:
 
-        /*
+        /**
         * Function to calculate height of current point in swing, triangular swing by default
         *
         * @param[in] swing_phase - current point progression through swing phase
@@ -74,7 +74,7 @@ namespace motor_driver
         */
         double swing_height(const double swing_phase, bool triangular = true);
 
-        /*
+        /**
         * Function calculates the touchdown location of leg
         *
         * @param[in] leg_index - index of leg for which to calculate touchdown location

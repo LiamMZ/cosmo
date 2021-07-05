@@ -10,7 +10,7 @@ motor_driver::SwingController::SwingController(motor_driver::SwingConfig config)
 /*
 * Function to calculate next foot location in gait
 */
-geometry_msgs::Point motor_driver::SwingController::next_foot_location(const double swing_phase, const int leg_index, State state, const MotorCommand command, bool triangular)
+geometry_msgs::Point motor_driver::SwingController::next_foot_location(const double swing_phase, const int leg_index, MovementState state, const MotorCommand command, bool triangular)
 {
     if(swing_phase>1 || swing_phase<0)
     {
