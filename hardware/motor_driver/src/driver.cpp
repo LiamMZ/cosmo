@@ -224,6 +224,7 @@ bool motor_driver::Driver::get_kinematics_params(double& abduction_offset, doubl
         return false;
     }
     L2 = temp;
+    
     if(!nh_.getParam("/motor_driver/abduction_offset", temp))
     {
         ROS_ERROR("motor_driver::Driver::get_swing_params Failed to load abduction_offset.");
